@@ -82,7 +82,7 @@ def fit_model(x, y):
     clf = SVC(kernel = 'rbf', class_weight='balanced')
 
     #create a dictionary for the parameters
-    paraDict = {'C':[1e3,5e3,1e4,5e4,1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]}
+    paraDict = {'C':[1e3,5e3,1e4,5e4,1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]} #FIXME here: modify 
 
     #Transform 'performance_metric' into scoring function
     score_func = make_scorer(performance_metric) 
@@ -105,7 +105,7 @@ def fit_model(x, y):
 
 raw_data = pd.read_csv('data_set_file.csv') #read in data #FIXME: change name as needed
 
-#splate data into features and target labels
+#split data into features and target labels
 target_raw = raw_data[raw_data.columns[-1]]
 features_raw = raw_data.drop(raw_data.columns[-1], axis = 1)
 
