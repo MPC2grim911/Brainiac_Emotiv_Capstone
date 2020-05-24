@@ -99,175 +99,178 @@ def fit_model(x, y):
 
 
 
+def main():
 
+    #Data exploration    #FIXME HERE!!!
 
-#Data exploration    #FIXME HERE!!!
+    raw_data = pd.read_csv('data_set_file.csv') #read in data #FIXME: change name as needed
 
-raw_data = pd.read_csv('data_set_file.csv') #read in data #FIXME: change name as needed
+    #split data into features and target labels
+    target_raw = raw_data[raw_data.columns[-1]]
+    features_raw = raw_data.drop(raw_data.columns[-1], axis = 1)
 
-#split data into features and target labels
-target_raw = raw_data[raw_data.columns[-1]]
-features_raw = raw_data.drop(raw_data.columns[-1], axis = 1)
+    print("The shape of the data: {}".format(raw_data.shape)) #print data shape
 
-print("The shape of the data: {}".format(raw_data.shape)) #print data shape
+    display(raw_data.head(n=15)) #display first 15 records of data
 
-display(raw_data.head(n=15)) #display first 15 records of data
 
 
+    #Data preparation
+    distribution(raw_data, 6) #visualize skewed continuous features of the original data
 
-#Data preparation
-distribution(raw_data, 6) #visualize skewed continuous features of the original data
 
 
+    #log transform the skewed features
+    feature_log_trans = features_raw.apply(lambda x: np.log(x+1))
 
-#log transform the skewed features
-feature_log_trans = features_raw.apply(lambda x: np.log(x+1))
+    #visualize the new log distributions
+    distribution(feature_log_trans, 6, transformed = True)
 
-#visualize the new log distributions
-distribution(feature_log_trans, 6, transformed = True)
 
 
+    #outlier detection
 
-#outlier detection
+    #calculate q1 (25th quantile of the data) for all features
+    Q1 = feature_log_trans.quantile(0.25)
 
-#calculate q1 (25th quantile of the data) for all features
-Q1 = feature_log_trans.quantile(0.25)
+    #calculate q3 ( 90th quantile of the data) for all features
+    Q3 = feature_log_trans.quantile(0.90)
 
-#calculate q3 ( 90th quantile of the data) for all features
-Q3 = feature_log_trans.quantile(0.90)
 
+    #use interquartile range to calculate an outlier step
+    #(1.5 times the interquartile range)
+    IQR = Q3 - Q1
+    out_Step = 1.5 * IQR
 
-#use interquartile range to calculate an outlier step
-#(1.5 times the interquartile range)
-IQR = Q3 - Q1
-out_Step = 1.5 * IQR
 
+    #Remove the outlier from the dataset
+    feature_log_trans_out = feature_log_trans[~((feature_log_trans < (Q1 - out_Step)) | (feature_log_trans > (Q3 + out_Step))).any(axis = 1)]
 
-#Remove the outlier from the dataset
-feature_log_trans_out = feature_log_trans[~((feature_log_trans < (Q1 - out_Step)) | (feature_log_trans > (Q3 + out_Step))).any(axis = 1)]
 
+    #join features and target after removing outliers
+    preprocessed_data_out = feature_log_trans_out.join(target_raw)
+    target_raw_out = preprocessed_data_out[preprocessed_data_out.columns[-1]]
 
-#join features and target after removing outliers
-preprocessed_data_out = feature_log_trans_out.join(target_raw)
-target_raw_out = preprocessed_data_out[preprocessed_data_out.columns[-1]]
+    #print data shape after removing outliers
+    print("The shape of the data after removing outliers: {}".format(preprocessed_data_out.shape))
 
-#print data shape after removing outliers
-print("The shape of the data after removing outliers: {}".format(preprocessed_data_out.shape))
+    display(preprocessed_data_out.head(n=10)) #display first 10 records
 
-display(preprocessed_data_out.head(n=10)) #display first 10 records
 
 
+    #Normalizing numerical features
 
-#Normalizing numerical features
+    #Initialize a scaler and apply to features
+    scaler = MinMaxScaler() #default = (0, 1)
 
-#Initialize a scaler and apply to features
-scaler = MinMaxScaler() #default = (0, 1)
+    feature_log_minmax_trans_out = pd.DataFrame(scaler.fit_transform(feature_log_trans_out), columns=features_raw.columns)
 
-feature_log_minmax_trans_out = pd.DataFrame(scaler.fit_transform(feature_log_trans_out), columns=features_raw.columns)
+    display(feature_log_minmax_trans_out.head()) #show example scaling record
 
-display(feature_log_minmax_trans_out.head()) #show example scaling record
 
 
 
+    #shuffle and split data
 
-#shuffle and split data
+    #Assign features to bands variable and labels to state varaable
+    bands = np.array(feature_log_minmax_trans_out)
+    state = np.array(target_raw_out)
 
-#Assign features to bands variable and labels to state varaable
-bands = np.array(feature_log_minmax_trans_out)
-state = np.array(target_raw_out)
+    #shuffle and split the data into training and testing sets
+    x_train, x_test, y_train, y_test = train_test_split(bands, state, test_size=0.2, random_state=42, shuffle=True)
 
-#shuffle and split the data into training and testing sets
-x_train, x_test, y_train, y_test = train_test_split(bands, state, test_size=0.2, random_state=42, shuffle=True)
+    print("Training and testing split was successful")
 
-print("Training and testing split was successful")
 
 
 
+    #PCA Transformation
 
-#PCA Transformation
+    pca = PCA().fit(x_train) #fit the PCA algorithm with data
 
-pca = PCA().fit(x_train) #fit the PCA algorithm with data
+    #plot the cumulative summation of the explained variance
+    plt.figure(figsize = (14,7))
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('Number of Components')
+    plt.ylabel('Variance (%)') #for each component
+    plt.title('Pulsar Dataset Explained Variance')
+    plt.show()
 
-#plot the cumulative summation of the explained variance
-plt.figure(figsize = (14,7))
-plt.plot(np.cumsum(pca.explained_variance_ratio_))
-plt.xlabel('Number of Components')
-plt.ylabel('Variance (%)') #for each component
-plt.title('Pulsar Dataset Explained Variance')
-plt.show()
 
 
+    n_comp = 33 #from the explained variance graph
 
-n_comp = 33 #from the explained variance graph
+    print("Estracting the top %d eigenfaces from %d faces"%(n_comp, x_train.shape[0]))
+    t0 = time()
 
-print("Estracting the top %d eigenfaces from %d faces"%(n_comp, x_train.shape[0]))
-t0 = time()
+    #create an instance of PCA, initialized with n_comp
+    pca = PCA(n_components=n_comp)
 
-#create an instance of PCA, initialized with n_comp
-pca = PCA(n_components=n_comp)
+    # Pass the training dataset to pca's fit method
+    pca = pca.fit(x_train)
 
-# Pass the training dataset to pca's fit method
-pca = pca.fit(x_train)
+    x_train_pca = pca.transform(x_train)
+    x_test_pca = pca.transform(x_test)
 
-x_train_pca = pca.transform(x_train)
-x_test_pca = pca.transform(x_test)
+    print("Explained variance ratios: ", pca.explained_variance_ratio_*100)
+    print("done in %0.3fs"%(time() - t0))
 
-print("Explained variance ratios: ", pca.explained_variance_ratio_*100)
-print("done in %0.3fs"%(time() - t0))
 
 
 
+    #fitting the model
 
-#fitting the model
+    #fit training data to model using grid search
+    model = fit_model(x_train_pca, y_train)
 
-#fit training data to model using grid search
-model = fit_model(x_train_pca, y_train)
+    #produce value for gamma and C
+    print("Parameter 'gamma' is {} for the original model.".format(model.get_params()['gamma']))
+    print("Parameter 'C' is {} for the optimal model.".format(model.get_params()['C']))
 
-#produce value for gamma and C
-print("Paarameter 'gamma' is {} for the original model.".format(model.get_params()['gamma']))
-print("Parameter 'C' is {} for the optimal model.".format(model.get_params()['C']))
 
 
 
 
+    #making predictions #FIXME here
+    y_pred = model.predict(x_test_pca) #make predictions
 
-#making predictions #FIXME here
-y_pred = model.predict(x_test_pca) #make predictions
+    #Lable states class. #FIXME: may have to change labels here
+    states_class = ['Focused', 'De-focused', 'Drowsy']
 
-#Lable states class. #FIXME: may have to change labels here
-states_class = ['Focused', 'De-focused', 'Drowsy']
+    for i, state in enumerate(y_pred): #show predictions
+        print("Predicted mentat state for test {}'s bands: {}".format(i+1, states_class[state-1]))
 
-for i, state in enumerate(y_pred): #show predictions
-    print("Predicted mentat state for test {}'s bands: {}".format(i+1, states_class[state-1]))
+        
 
-    
 
 
+    #final model Evaluation #FIXME here
 
-#final model Evaluation #FIXME here
+    #calculate f1 score and assign to variable
+    score = f1_score(y_test, y_pred, average='micro')
 
-#calculate f1 score and assign to variable
-score = f1_score(y_test, y_pred, average='micro')
+    print("F1 score: %0.1f %%"%(score*100)) #print score
 
-print("F1 score: %0.1f %%"%(score*100)) #print score
 
+    #calculate the confusion matrix and assign to variable
+    matrix = confusion_matrix(y_test, y_pred)
 
-#calculate the confusion matrix and assign to variable
-matrix = confusion_matrix(y_test, y_pred)
+    #plot the confusion matrix
+    fig, ax = plot_confusion_matrix(matrix)
+    plt.show()
 
-#plot the confusion matrix
-fig, ax = plot_confusion_matrix(matrix)
-plt.show()
 
 
+    #calculate classification report and assign to variable
+    report = classification_report(y_test, y_pred)
 
-#calculate classification report and assign to variable
-report = classification_report(y_test, y_pred)
+    print(report)#print classification report
 
-print(report)#print classification report
 
 
 
+if __name__ == "__main__":
+    main()
 
 
 
