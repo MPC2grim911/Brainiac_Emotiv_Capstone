@@ -235,10 +235,10 @@ def main():
     y_pred = model.predict(x_test_pca) #make predictions
 
     #Lable states class. #FIXME: may have to change labels here
-    states_class = ['Focused', 'De-focused', 'Drowsy']
+    states_class = ['Triangle', 'Circle', 'Square']
 
     for i, state in enumerate(y_pred): #show predictions
-        print("Predicted mentat state for test {}'s bands: {}".format(i+1, states_class[state-1]))
+        print("Predicted mental state for test {}'s bands: {}".format(i+1, states_class[state-1]))
 
         
 
@@ -257,6 +257,8 @@ def main():
 
     #plot the confusion matrix
     fig, ax = plot_confusion_matrix(matrix)
+    
+    plt.savefig('plot_confusion_matrix.png') #save results
     plt.show()
 
 
@@ -265,6 +267,10 @@ def main():
     report = classification_report(y_test, y_pred)
 
     print(report)#print classification report
+
+    report = classification_report(y_test, y_pred, output_dict=True)
+    df = pd.DataFrame(report).transpose()
+    df.to_csv('report.csv')
 
 
 
