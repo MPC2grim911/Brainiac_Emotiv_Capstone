@@ -257,6 +257,9 @@ def main():
 
     #plot the confusion matrix
     fig, ax = plot_confusion_matrix(matrix)
+    labels = ['triangle', 'circle', 'square']
+    ax.set_xticklabels([''] + labels)
+    ax.set_yticklabels([''] + labels)
     
     plt.savefig('plot_confusion_matrix.png') #save results
     plt.show()
