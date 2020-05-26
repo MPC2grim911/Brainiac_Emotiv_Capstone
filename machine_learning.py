@@ -72,7 +72,7 @@ def performance_metric(y_tru, y_pred):
 
 #perform grid search over the 'max_depth' parameter for a decision 
 #tree regressor trained on the input data (x, y)
-def fit_model(x, y):
+def fit_model(x, y): #FIXME: may have to change paameter dictionary
 
     #create cross validation sets from the training data
     cv_sets = ShuffleSplit(n_splits = 10, test_size = 0.20, random_state = 0)
@@ -81,7 +81,7 @@ def fit_model(x, y):
     #create a linear discriminant analysis object
     clf = SVC(kernel = 'rbf', class_weight='balanced')
 
-    #create a dictionary for the parameters
+    #create a dictionary for the parameters 
     paraDict = {'C':[1e3,5e3,1e4,5e4,1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]} #FIXME here: modify 
 
     #Transform 'performance_metric' into scoring function
@@ -221,9 +221,9 @@ def main():
     #fitting the model
 
     #fit training data to model using grid search
-    model = fit_model(x_train_pca, y_train)
+    model = fit_model(x_train_pca, y_train) #FIXME
 
-    #produce value for gamma and C
+    #produce value for gamma and C #FIXME: may have to change parameters
     print("Parameter 'gamma' is {} for the original model.".format(model.get_params()['gamma']))
     print("Parameter 'C' is {} for the optimal model.".format(model.get_params()['C']))
 
@@ -231,14 +231,14 @@ def main():
 
 
 
-    #making predictions #FIXME here
+    #making predictions 
     y_pred = model.predict(x_test_pca) #make predictions
 
-    #Lable states class. #FIXME: may have to change labels here
+    #Lable states class. 
     states_class = ['Triangle', 'Circle', 'Square']
 
     for i, state in enumerate(y_pred): #show predictions
-        print("Predicted mental state for test {}'s bands: {}".format(i+1, states_class[state-1]))
+        print("Predicted object id for test {}'s bands: {}".format(i+1, states_class[state-1]))
 
         
 
