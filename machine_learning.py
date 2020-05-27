@@ -72,17 +72,17 @@ def performance_metric(y_tru, y_pred):
 
 #perform grid search over the 'max_depth' parameter for a decision 
 #tree regressor trained on the input data (x, y)
-def fit_model(x, y): #FIXME: may have to change paameter dictionary
+def fit_model(x, y): #FIXME: may have to modify in here
 
     #create cross validation sets from the training data
     cv_sets = ShuffleSplit(n_splits = 10, test_size = 0.20, random_state = 0)
 
 
     #create a linear discriminant analysis object
-    clf = SVC(kernel = 'rbf', class_weight='balanced')
+    clf = SVC(kernel = 'rbf', class_weight='balanced') #FIXME: may have to adjust params
 
-    #create a dictionary for the parameters 
-    paraDict = {'C':[1e3,5e3,1e4,5e4,1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]} #FIXME here: modify 
+    #create a dictionary for the parameters #FIXME:may have to adjust params
+    paraDict = {'C':[1e3,5e3,1e4,5e4,1e5], 'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]} 
 
     #Transform 'performance_metric' into scoring function
     score_func = make_scorer(performance_metric) 
@@ -101,7 +101,7 @@ def fit_model(x, y): #FIXME: may have to change paameter dictionary
 
 def main():
 
-    #Data exploration    #FIXME HERE!!!
+    #Data exploration   
 
     raw_data = pd.read_csv('data_set_file.csv') #read in data #FIXME: change name as needed
 
@@ -244,7 +244,7 @@ def main():
 
 
 
-    #final model Evaluation #FIXME here
+    #final model Evaluation 
 
     #calculate f1 score and assign to variable
     score = f1_score(y_test, y_pred, average='micro')
