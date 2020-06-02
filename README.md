@@ -2,6 +2,7 @@
 
 This folder contains the basic code and files for object identification through the brainiac emotiv.
 
+---
 
 Data Signal Processing
 
@@ -9,6 +10,7 @@ Data Signal Processing
 
 -Involves additional functions and data conversions
 
+---
 
 Machine Learning
 
