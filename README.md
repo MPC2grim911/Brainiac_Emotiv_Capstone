@@ -21,4 +21,4 @@ Machine Learning
 ---
 Project Video 
 
-https://youtu.be/sDN6ji8JcK8
+https://youtu.be/QjWGSUqTwHI
